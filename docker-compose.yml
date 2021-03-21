@@ -1,0 +1,6 @@
+services:
+  py:
+    build: .
+    volumes:
+      - ./src/py/:/py/
+    entrypoint: python3 /py/main.py 

@@ -1,0 +1,43 @@
+vars:
+  OUTFILE: basicapp
+  OUTDIR: Output
+  BUILDDIR: Build
+  OBJS:
+    - main.o
+    - module1.o
+  CC: gcc
+  CFLAGS: -O3 -Wall -std=c99
+container:
+  image_base: debian
+  image_ver: buster-backports
+  image_arch: amd64
+  packages: [gcc]
+shell: /bin/bash
+targets:
+  all:
+    check_exist: False
+    depends: [$(OUTFILE), removebuild]
+  $(OUTFILE):
+    depends: [$(OBJS), $(OUTDIR)]
+    command: $(CC) $(CFLAGS) $(OBJS) -o $@
+  $(BUILDDIR)/$[.+].o:
+    depends: [$#0.c, $(BUILDDIR)]
+    command: $(CC) -c $(CFLAGS) $< -o $@
+  $(BUILDDIR):
+    command: mkdir "$(BUILDDIR)"
+  $(OUTDIR):
+    command: mkdir "$(OUTDIR)"
+  removebuild:
+    check_exist: False
+    command: if [ -d "$(BUILDDIR)" ]; then rm -r "$(BUILDDIR)"; fi;
+  run:
+    check_exist: False
+    depends: [all]
+    command: |
+      chmod +x $(OUTFILE)
+      ./$(OUTFILE)
+  clean:
+    check_exist: False
+    command: if [ -d "$(OUTDIR)" ]; then rm -r "$(OUTDIR)"; fi;
+artifact:
+  file: Output/basicapp

@@ -21,7 +21,7 @@ targets:
     depends: [$(OBJS), $(OUTDIR)]
     command: $(CC) $(CFLAGS) $(OBJS) -o $@
   $(BUILDDIR)/$[.+].o:
-    depends: [$#0.c, $(BUILDDIR)]
+    depends: [$#1.c, $(BUILDDIR)]
     command: $(CC) -c $(CFLAGS) $< -o $@
   $(BUILDDIR):
     command: mkdir "$(BUILDDIR)"

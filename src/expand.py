@@ -47,14 +47,15 @@ def expand_vars_in_string(input_string, build_vars):
     result_string = ""
     while True:
         dollar_offset = input_string.find("$", curr_offset)
-        if dollar_offset < 0:
+        expr_offset = dollar_offset + 1
+        if (dollar_offset < 0) or (expr_offset >= len(input_string)):
             break
-        if input_string[dollar_offset + 1] == "(":
+        if input_string[expr_offset] == "(":
             result_string += input_string[curr_offset:dollar_offset]
-            var_start_offset = dollar_offset + 2
+            var_start_offset = expr_offset + 1
             var_end_offset = input_string.find(")", var_start_offset)
             if var_end_offset < 0:
-                raise ExpandError("Expected ')' after '$(' token")
+                raise VariableSyntaxError("Expected ')' after '$(' token")
             var_name = input_string[var_start_offset:var_end_offset]
             var_value = build_vars.get(var_name, None)
             if var_value is None:
@@ -64,9 +65,13 @@ def expand_vars_in_string(input_string, build_vars):
             result_string += var_value
             curr_offset = var_end_offset + 1
         else:
-            new_offset = dollar_offset + 1
-            result_string += input_string[curr_offset:new_offset]
-            curr_offset = new_offset
+            result_string += input_string[curr_offset:expr_offset]
+            curr_offset = expr_offset
+            after_escaped_offset = curr_offset + 2
+            if (after_escaped_offset <= len(input_string)) and \
+                (input_string[curr_offset:after_escaped_offset] == "$("):
+                result_string += "("
+                curr_offset = after_escaped_offset
     result_string += input_string[curr_offset:]
     return result_string
 
@@ -99,6 +104,9 @@ class ExpandError(Exception):
     pass
 
 class BadEntryTypeError(ExpandError):
+    pass
+
+class VariableSyntaxError(ExpandError):
     pass
 
 class DeclarationError(ExpandError):

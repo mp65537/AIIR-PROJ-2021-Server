@@ -55,7 +55,7 @@ def expand_vars_in_string(input_string, build_vars):
             var_start_offset = expr_offset + 1
             var_end_offset = input_string.find(")", var_start_offset)
             if var_end_offset < 0:
-                raise VariableSyntaxError("Expected ')' after '$(' token")
+                raise VarExprError("Expected ')' after '$(' token")
             var_name = input_string[var_start_offset:var_end_offset]
             var_value = build_vars.get(var_name, None)
             if var_value is None:
@@ -106,7 +106,7 @@ class ExpandError(Exception):
 class BadEntryTypeError(ExpandError):
     pass
 
-class VariableSyntaxError(ExpandError):
+class VarExprError(ExpandError):
     pass
 
 class DeclarationError(ExpandError):

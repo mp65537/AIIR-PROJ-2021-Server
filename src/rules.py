@@ -1,25 +1,40 @@
 import re
 
 class BuildRule:
-    def __init__(self, rule_pattern, rule_data):
-        self._target_re = re.compile(
-            type(self)._re_expr_to_pattern(rule_pattern))
-        self._command = ""
-        self._depends = []
+    def __init__(self, rule_expr, rule_data):
+        self._target_regex = type(self)._regex_expr_to_regex(rule_expr)
+        self._depends_pattern = [
+            type(self)._sub_expr_to_pattern(item) \
+                for item in rule_data.get("depends", [])
+        ]
+        self._command_pattern = type(self)._sub_expr_to_pattern(rule_data["command"])
+        self._check_exist = rule_data.get("check_exist", True)
 
-    def match(self, target_name):
-        # check if name match rule
+    def get_data_if_match(self, target_name):
+        if self._target_regex.fullmatch(target_name) is None:
+            return None
+        target_depends = [
+            self._target_regex.sub(item, target_name) \
+                for item in self._depends_pattern
+        ]
+        target_command = self._target_regex.sub(
+            self._command_pattern, target_name)
+        target_command = target_command.replace("$@", target_name)
+        if len(target_depends) > 0:
+            target_command = target_command.replace("$<", target_depends[0])
+        return {"depends": target_depends, 
+                "command": target_command,
+                "check_exist": self._check_exist}
         
-        pass
-
-    def get_depends(self, target_name):
-        pass
-
-    def get_command(self, target_name):
-        pass
+    @classmethod
+    def from_build_data(cls, build_data):
+        return [
+            cls(*item) \
+                for item in build_data["targets"].items()
+        ]
 
     @staticmethod
-    def _re_expr_to_pattern(input_string):
+    def _regex_expr_to_regex(input_string):
         curr_offset = 0
         result_string = ""
         while True:
@@ -34,7 +49,7 @@ class BuildRule:
                 while True:
                     re_end_offset = input_string.find("]", re_curr_offset)
                     if re_end_offset < 0:
-                        raise PatternSyntaxError("Expected ']' after '$[' token")
+                        raise RegexExprError("Expected ']' after '$[' token")
                     if input_string[re_end_offset - 1] != "\\":
                         break
                     re_curr_offset = re_end_offset + 1
@@ -51,10 +66,10 @@ class BuildRule:
                     result_string += re.escape("[")
                     curr_offset = after_escaped_offset
         result_string += re.escape(input_string[curr_offset:])
-        return result_string
+        return re.compile(result_string)
 
     @staticmethod
-    def _re_sub_expr_to_text(input_string):
+    def _sub_expr_to_pattern(input_string):
         curr_offset = 0
         result_string = ""
         while True:
@@ -76,35 +91,6 @@ class BuildRule:
                     curr_offset = after_escaped_offset
         result_string += input_string[curr_offset:]
         return result_string
-    
-    # should be one method taking 
-    # target and returning whole 
-    # info or None
 
-    # passing some target name
-    # evaluating name with regex
-    # and checking if pattern matched (saving match)
-    # if not return None; if yes go on
-    #
-    # replacing this patterns:  
-    # firs_dep_name         <-  $<   (command)
-    # target name           <-  $@   (command)
-    # regex group match     <-  $#N  (command and depends)
-    # returning {"name": target_name, 
-    #   deps: [..], command: "<replaced_string>"}
-
-def get_build_rules(build_data):
-    build_vars = build_data["variables"]
-
+class RegexExprError(Exception):
     pass
-
-
-
-class PatternSyntaxError(Exception):
-    pass
-
-
-# list of build rules
-
-
-#RESULT OF WHOLE PARSING: build_env, shell, build_rules list, artifact path list

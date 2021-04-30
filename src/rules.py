@@ -7,7 +7,12 @@ class BuildRule:
             type(self)._sub_expr_to_pattern(item) \
                 for item in rule_data.get("depends", [])
         ]
-        self._command_pattern = type(self)._sub_expr_to_pattern(rule_data["command"])
+        command_sub_expr = rule_data.get("command", None)
+        if command_sub_expr is not None:
+            self._command_pattern = \
+                type(self)._sub_expr_to_pattern(command_sub_expr)
+        else:
+            self._command_pattern = None
         self._check_exist = rule_data.get("check_exist", True)
 
     def get_data_if_match(self, target_name):
@@ -17,17 +22,20 @@ class BuildRule:
             self._target_regex.sub(item, target_name) \
                 for item in self._depends_pattern
         ]
-        target_command = self._target_regex.sub(
-            self._command_pattern, target_name)
-        target_command = target_command.replace("$@", target_name)
-        if len(target_depends) > 0:
-            target_command = target_command.replace("$<", target_depends[0])
+        if self._command_pattern is not None:
+            target_command = self._target_regex.sub(
+                self._command_pattern, target_name)
+            target_command = target_command.replace("$@", target_name)
+            if len(target_depends) > 0:
+                target_command = target_command.replace("$<", target_depends[0])
+        else:
+            target_command = None
         return {"depends": target_depends, 
                 "command": target_command,
                 "check_exist": self._check_exist}
         
     @classmethod
-    def from_build_data(cls, build_data):
+    def create_list(cls, build_data):
         return [
             cls(*item) \
                 for item in build_data["targets"].items()

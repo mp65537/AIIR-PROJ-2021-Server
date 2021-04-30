@@ -1,10 +1,10 @@
 vars:
-  OUTFILE: basicapp
   OUTDIR: Output
   BUILDDIR: Build
+  OUTFILE: $(OUTDIR)/basicapp
   OBJS:
-    - main.o
-    - module1.o
+    - $(BUILDDIR)/main.o
+    - $(BUILDDIR)/module1.o
   CC: gcc
   CFLAGS: -O3 -Wall -std=c99
 container:

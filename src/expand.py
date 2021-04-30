@@ -2,47 +2,82 @@ from copy import deepcopy
 
 def expand_config_tree(build_config):
     build_data = deepcopy(build_config)
-    build_vars = build_data["vars"]
+    raw_build_vars = build_data["vars"]
+    validate_vars(raw_build_vars)
+    build_vars = expand_vars_in_vars(raw_build_vars)
     del build_data["vars"]
-    validate_vars(build_vars)
     vaildate_dict(build_data)
     return expand_vars_in_dict(build_data, build_vars)
 
-def expand_vars_in_dict(input_dict, build_vars):
+def expand_vars_in_dict(input_dict, vars_dict):
     result_dict = {}
     for item_name, item_value in input_dict.items():
         if isinstance(item_value, str):
             result_value = expand_vars_in_string(
-                item_value, build_vars)
+                item_value, vars_dict)
         elif isinstance(item_value, list):
             result_value = expand_vars_in_list(
-                item_value, build_vars)
+                item_value, vars_dict)
         elif isinstance(item_value, dict):
             result_value = expand_vars_in_dict(
-                item_value, build_vars)
+                item_value, vars_dict)
         else:
             result_value = item_value
         result_dict[expand_vars_in_string(
-                item_name, build_vars)] = result_value
+                item_name, vars_dict)] = result_value
     return result_dict
 
-def expand_vars_in_list(input_list, build_vars):
+def expand_vars_in_vars(raw_vars_dict):
+    result_vars = {}
+    missing_vars = []
+    for var_name, raw_var_value in raw_vars_dict.items():
+        try:
+            if isinstance(raw_var_value, list):
+                result_vars[var_name] = \
+                    expand_vars_in_list(raw_var_value, result_vars)
+            else:
+                result_vars[var_name] = \
+                    expand_vars_in_string(raw_var_value, result_vars)
+        except VariableError:
+            missing_vars.append(var_name)
+    num_of_iter = len(missing_vars)
+    for _ in range(0, num_of_iter):
+        for var_index in range(len(missing_vars) - 1, -1, -1):
+            var_name = missing_vars[var_index]
+            raw_var_value = raw_vars_dict[var_name]
+            try:
+                if isinstance(raw_var_value, list):
+                    result_vars[var_name] = \
+                        expand_vars_in_list(raw_var_value, result_vars)
+                else:
+                    result_vars[var_name] = \
+                        expand_vars_in_string(raw_var_value, result_vars)
+                del missing_vars[var_index]
+                break
+            except VariableError:
+                pass
+    if len(missing_vars) > 0:
+        raise VariableError("Undetermined values of variables: {}"
+            .format(", ".join(missing_vars)))
+    return result_vars
+
+def expand_vars_in_list(input_list, vars_dict):
     result_list = []
     for item in input_list:
         if (item[:2] == "$(") and (item[-1:] == ")"):
             var_name = item[2:-1]
-            var_value = build_vars.get(var_name, None)
+            var_value = vars_dict.get(var_name, None)
             if var_value is None:
-                raise DeclarationError("Undeclared variable '{}'".format(var_name))
+                raise VariableError("Undeclared variable '{}'".format(var_name))
             if isinstance(var_value, list):
                 result_list.extend(var_value)
             else:
                 result_list.append(var_value)
             continue
-        result_list.append(expand_vars_in_string(item, build_vars))
+        result_list.append(expand_vars_in_string(item, vars_dict))
     return result_list
 
-def expand_vars_in_string(input_string, build_vars):
+def expand_vars_in_string(input_string, vars_dict):
     curr_offset = 0
     result_string = ""
     while True:
@@ -57,9 +92,9 @@ def expand_vars_in_string(input_string, build_vars):
             if var_end_offset < 0:
                 raise VarExprError("Expected ')' after '$(' token")
             var_name = input_string[var_start_offset:var_end_offset]
-            var_value = build_vars.get(var_name, None)
+            var_value = vars_dict.get(var_name, None)
             if var_value is None:
-                raise DeclarationError("Undeclared variable '{}'".format(var_name))
+                raise VariableError("Undeclared variable '{}'".format(var_name))
             if isinstance(var_value, list):
                 var_value = " ".join(var_value)
             result_string += var_value
@@ -84,10 +119,10 @@ def vaildate_dict(input_dict):
         elif isinstance(item_value, dict):
             vaildate_dict(item_value)
         elif not (isinstance(item_value, str) or isinstance(item_value, bool)):
-            raise BadEntryTypeError("Variables have to be strings or lists")
+            raise BadEntryTypeError("Entries have to be bools, strings, lists or dicts")
 
-def validate_vars(build_vars):
-    for var_name, var_value in build_vars.items():
+def validate_vars(vars_dict):
+    for var_name, var_value in vars_dict.items():
         if not isinstance(var_name, str):
             raise BadEntryTypeError("Variable names have to be strings")
         if isinstance(var_value, list):
@@ -109,5 +144,5 @@ class BadEntryTypeError(ExpandError):
 class VarExprError(ExpandError):
     pass
 
-class DeclarationError(ExpandError):
+class VariableError(ExpandError):
     pass

@@ -15,7 +15,7 @@ class BuildRule:
             self._command_pattern = None
         self._check_exist = rule_data.get("check_exist", True)
 
-    def get_data_if_match(self, target_name):
+    def match(self, target_name):
         if self._target_regex.fullmatch(target_name) is None:
             return None
         target_deps = tuple(
@@ -33,14 +33,7 @@ class BuildRule:
         return {"deps": target_deps, 
                 "command": target_command,
                 "check_exist": self._check_exist}
-        
-    @classmethod
-    def create_list(cls, build_data):
-        return [
-            cls(*item) \
-                for item in build_data["targets"].items()
-        ]
-
+    
     @staticmethod
     def _regex_expr_to_regex(input_string):
         curr_offset = 0

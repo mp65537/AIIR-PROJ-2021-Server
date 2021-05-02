@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-def expand_config_tree(build_config):
+def expand_config(build_config):
     build_data = deepcopy(build_config)
     raw_build_vars = build_data["vars"]
     validate_vars(raw_build_vars)

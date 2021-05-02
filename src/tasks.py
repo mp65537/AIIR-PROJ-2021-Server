@@ -2,14 +2,15 @@ from enum import Enum
 from collections import deque
 
 class TaskManager:
-    def __init__(self, root_target, targets_dict):
+    def __init__(self, root_target, targets_func):
         self._id_to_task = {}
         self._name_to_task = {}
         self._ready_tasks = deque()
-        self._root_task = self._create_tree(
+        targets_dict = targets_func(root_target)
+        self._root_task = self._create_task(
             root_target, None, targets_dict)
 
-    def _create_tree(self, target_name, parent_task, targets_dict):
+    def _create_task(self, target_name, parent_task, targets_dict):
         existing_task = self._name_to_task.get(target_name, None)
         if existing_task is not None:
             existing_task.depends_on.append(parent_task)
@@ -20,7 +21,7 @@ class TaskManager:
         self._name_to_task[target_name] = task_obj
         task_deps = task_obj.deps
         for dep_name in task_target["deps"]:
-            task_deps.append(self._create_tree(
+            task_deps.append(self._create_task(
                 dep_name, task_obj, targets_dict))
             task_obj.counter += 1
         if len(task_deps) == 0:

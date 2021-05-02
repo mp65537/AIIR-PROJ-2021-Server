@@ -3,9 +3,9 @@ import re
 class BuildRule:
     def __init__(self, rule_expr, rule_data):
         self._target_regex = type(self)._regex_expr_to_regex(rule_expr)
-        self._depends_pattern = [
+        self._deps_pattern = [
             type(self)._sub_expr_to_pattern(item) \
-                for item in rule_data.get("depends", [])
+                for item in rule_data.get("deps", [])
         ]
         command_sub_expr = rule_data.get("command", None)
         if command_sub_expr is not None:
@@ -18,19 +18,19 @@ class BuildRule:
     def get_data_if_match(self, target_name):
         if self._target_regex.fullmatch(target_name) is None:
             return None
-        target_depends = [
+        target_deps = tuple(
             self._target_regex.sub(item, target_name) \
-                for item in self._depends_pattern
-        ]
+                for item in self._deps_pattern
+        )
         if self._command_pattern is not None:
             target_command = self._target_regex.sub(
                 self._command_pattern, target_name)
             target_command = target_command.replace("$@", target_name)
-            if len(target_depends) > 0:
-                target_command = target_command.replace("$<", target_depends[0])
+            if len(target_deps) > 0:
+                target_command = target_command.replace("$<", target_deps[0])
         else:
             target_command = None
-        return {"depends": target_depends, 
+        return {"deps": target_deps, 
                 "command": target_command,
                 "check_exist": self._check_exist}
         

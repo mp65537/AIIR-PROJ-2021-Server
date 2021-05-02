@@ -11,17 +11,18 @@ container:
   image_base: debian
   image_ver: buster-backports
   image_arch: amd64
+  package_mgr: apt install
   packages: [gcc]
 shell: /bin/bash
 targets:
   all:
     check_exist: False
-    depends: [$(OUTFILE), removebuild]
+    deps: [$(OUTFILE), removebuild]
   $(OUTFILE):
-    depends: [$(OBJS), $(OUTDIR)]
+    deps: [$(OBJS), $(OUTDIR)]
     command: $(CC) $(CFLAGS) $(OBJS) -o $@
   $(BUILDDIR)/$[.+].o:
-    depends: [$#1.c, $(BUILDDIR)]
+    deps: [$#1.c, $(BUILDDIR)]
     command: $(CC) -c $(CFLAGS) $< -o $@
   $(BUILDDIR):
     command: mkdir "$(BUILDDIR)"
@@ -32,7 +33,7 @@ targets:
     command: if [ -d "$(BUILDDIR)" ]; then rm -r "$(BUILDDIR)"; fi;
   run:
     check_exist: False
-    depends: [all]
+    deps: [all]
     command: |
       chmod +x $(OUTFILE)
       ./$(OUTFILE)

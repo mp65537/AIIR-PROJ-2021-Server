@@ -1,9 +1,9 @@
 class BuildTarget:
-    def __init__(self, name, command, check_exist = True, depends = ()):
+    def __init__(self, name, command, check_exist = True, deps = ()):
         self._name = name
         self._check_exist = check_exist
         self._command = command
-        self._depends = depends
+        self._deps = deps
 
     @property
     def name(self):
@@ -18,8 +18,8 @@ class BuildTarget:
         return self._command
 
     @property
-    def depends(self):
-        return self._depends
+    def deps(self):
+        return self._deps
 
     @classmethod
     def create_dict(cls, target_name, build_rules):
@@ -38,15 +38,12 @@ class BuildTarget:
             if target_data is not None:
                 break
         if target_data is not None:
-            dep_obj_list = []
-            for target_dep in target_data["depends"]:
-                dep_obj_list.append(cls._create_tree(
-                    target_dep, build_rules, targets_dict))
+            for target_dep in target_data["deps"]:
+                cls._create_tree(target_dep, build_rules, targets_dict)
             target_obj = cls(target_name,
                 target_data["command"],
                 target_data["check_exist"],
-                tuple(dep_obj_list))
+                target_data["deps"])
         else:
             target_obj = cls(target_name, None)
         targets_dict[target_name] = target_obj
-        return target_obj

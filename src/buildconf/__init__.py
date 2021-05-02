@@ -7,10 +7,12 @@ except ImportError:
 
 from .expand import expand_config
 from .rules import BuildRule
+from .errors import *
 
 class BuildConfReader:
     def __init__(self, conf_text):
         self.expanded_data = expand_config(conf_text)
+        type(self)._validate_data(self.expanded_data)
         self.rules = []
         for target_item in self.expanded_data["targets"].items():
              self.rules.append(BuildRule(*target_item))
@@ -49,6 +51,17 @@ class BuildConfReader:
     @classmethod
     def from_text(cls, text):
         return cls(text)
+
+    @staticmethod
+    def _validate_data(config_data, section):
+        for section in ("container", "shell", "targets", "artifact")
+            BuildConfReader._validate_section(config_data, section)
+
+    @staticmethod
+    def _validate_section(config_data, section):
+        if not section in config_data:
+            raise NoSectionError(
+                "Provided config has no '{}' section".format(section))
 
     @staticmethod
     def _create_target(target_name, rules, out_dict):

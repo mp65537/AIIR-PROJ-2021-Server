@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+from .errors import ExpandError
+
 def expand_config(build_config):
     build_data = deepcopy(build_config)
     raw_build_vars = build_data["vars"]
@@ -134,9 +136,6 @@ def validate_list(input_list):
     for item in input_list:
         if not isinstance(item, str):
             raise BadEntryTypeError("Lists could only have string items")
-
-class ExpandError(Exception):
-    pass
 
 class BadEntryTypeError(ExpandError):
     pass

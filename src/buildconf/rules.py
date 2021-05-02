@@ -1,5 +1,7 @@
 import re
 
+from .errors import RuleError
+
 class BuildRule:
     def __init__(self, rule_expr, rule_data):
         self._target_regex = type(self)._regex_expr_to_regex(rule_expr)
@@ -93,5 +95,5 @@ class BuildRule:
         result_string += input_string[curr_offset:]
         return result_string
 
-class RegexExprError(Exception):
+class RegexExprError(RuleError):
     pass

@@ -2,5 +2,6 @@ services:
   py:
     build: .
     volumes:
-      - ./src/py/:/py/
+      - ./src/:/py/
     entrypoint: python3 /py/main.py 
+    ports: ["8080:8080"]

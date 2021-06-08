@@ -1,12 +1,13 @@
+version: '3'
 services:
-  py:
-    build: .
-    volumes:
-      - ./src/:/py/
-    entrypoint: python3 /py/main.py 
-    ports: ["8080:8080"]
+    py:
+        build: .
+        volumes:
+            - ./app:/app
+            - ./uploads:/uploads
+        ports: ["8080:80"]
 
 networks:
-  default:
-      external:
-          name: aiir_network
+    default:
+        external:
+            name: aiir_network

@@ -1,4 +1,4 @@
-import os, git, tempfile, time, requests, msgpack, json, logging
+import os, git, tempfile, json, logging
 
 from flask import Flask, send_file, request
 from forms import CompileForm

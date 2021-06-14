@@ -53,8 +53,8 @@ class BuildConfReader:
         return cls(text)
 
     @staticmethod
-    def _validate_data(config_data, section):
-        for section in ("container", "shell", "targets", "artifact")
+    def _validate_data(config_data):
+        for section in ("container", "shell", "targets", "artifact"):
             BuildConfReader._validate_section(config_data, section)
 
     @staticmethod

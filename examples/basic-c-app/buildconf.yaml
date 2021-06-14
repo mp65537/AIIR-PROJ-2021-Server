@@ -11,9 +11,12 @@ container:
   image_base: debian
   image_ver: buster-backports
   image_arch: amd64
-  package_mgr: apt install
+  update_cmd: apt-get update
+  install_cmd: apt-get -y install
   packages: [gcc]
-shell: /bin/bash
+shell:
+  path: /bin/bash
+  switch: -c
 targets:
   all:
     check_exist: False

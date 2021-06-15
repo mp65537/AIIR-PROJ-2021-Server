@@ -13,7 +13,10 @@ from logutils import ListLoggingHandler
 
 node_comm = MPI.COMM_WORLD
 node_rank = node_comm.Get_rank()
+node_count = node_comm.Get_size()
+node_last = node_count - 1
 
+comm_tag = 25
 listen_address = "0.0.0.0"
 listen_port = os.getenv("BUILDER_HTTP_PORT", 8080)
 build_directory = os.getenv("BUILDER_DIR", "/build")
@@ -57,7 +60,11 @@ def handle_build_request(request_data):
         build_tasks = TaskManager(
             request_data["target"],
             build_reader.targets_func)
-        assign_build_tasks(build_tasks, log_list)
+        try:
+            assign_build_tasks(build_tasks, log_list)
+        except BuildingError as error:
+            logging.error(str(error))
+            return response_data
         try:
             artifact_data = package_artifact_zip(build_directory, build_reader.artifact)
         except (zipfile.BadZipFile, zipfile.LargeZipFile, ForbiddenPathError) as error:
@@ -76,9 +83,33 @@ def extract_source_zip(zip_data, out_dir):
             mem_zip.extractall(out_dir)
 
 def assign_build_tasks(build_tasks, log_list):
+    error_flag = False
+    available_nodes = []
+    node_comm.bcast(TaskManager.empty_task, root = 0)
+    for node_id in range(1, node_count):
+        node_comm.recv(source = node_id, tag = comm_tag)
+        available_nodes.append(node_id)
     while not build_tasks.all_done:
-        aa = build_tasks.take_next()
-        pass
+        while True:
+            if len(available_nodes) == 0:
+                break
+            next_task = build_tasks.take_next()
+            if next_task is None:
+                break
+            dest_node_id = available_nodes.pop()
+            node_comm.send(next_task, 
+                dest = dest_node_id, tag = comm_tag)
+        task_result = node_comm.recv(source = MPI.ANY_SOURCE, tag = comm_tag)
+        error_flag = not task_result["success"]
+        if error_flag:
+            break
+        available_nodes.append(task_result["node_id"])
+        build_tasks.mark_done(task_result["task_id"])
+        log_list.extend(task_result["logs"])
+    if error_flag:
+        while len(available_nodes) < node_last:
+            node_comm.recv(source = MPI.ANY_SOURCE, tag = comm_tag)
+        raise BuildingError("Error building from provided source")
 
 def package_artifact_zip(in_dir, artifact_entries):
     with io.BytesIO() as mem_file:

@@ -2,6 +2,8 @@ from enum import Enum
 from collections import deque
 
 class TaskManager:
+    empty_task = {"id": 0}
+    
     def __init__(self, root_target, targets_func):
         self._id_to_task = {}
         self._name_to_task = {}

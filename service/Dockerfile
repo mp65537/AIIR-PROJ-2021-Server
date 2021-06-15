@@ -54,7 +54,7 @@ RUN chown -R ${USER}:${USER} ${HOME}/.openmpi
 ENV TRIGGER 1
 
 ENV BUILDER_DIR ${HOME}/work
-ENV BUILDER_HTTP_PORT 8080
+ENV BUILDER_HTTP_PORT 8000
 
 ADD src ${HOME}/builder
 RUN mkdir -p ${BUILDER_DIR} && chown -R ${USER}:${USER} ${BUILDER_DIR}

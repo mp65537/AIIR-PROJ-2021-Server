@@ -1,0 +1,44 @@
+#file-upload-button{
+    background-color: #26a69a;
+    color:white;
+}
+.zipfile{
+    margin-top: 50px;
+}
+
+#download-button{
+    width: 45%;
+    float: right;
+}
+
+#compile-button{
+    width: 45%;
+    float: left;
+}
+
+#link{
+    width: 45%;
+    float: left;
+    text-align: center;
+}
+
+#branch{
+    width: 45%;
+    float: right;
+    text-align: center;
+}
+
+#file-button{
+    width: 20%
+}
+
+.my-scroll-box{
+    height: 300px;
+    border: 1px solid #ccc;
+    font: 16px;
+    /* word-wrap: break-word; */
+    overflow-wrap: break-word;
+
+}
+
+

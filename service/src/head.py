@@ -25,7 +25,6 @@ head_logger = logging.getLogger(__name__)
 buildconf_path = os.path.join(build_directory, "buildconf.yaml")
 
 def start_head():
-    print("head")
     logging.info("Builder main node has been started")
     external_server = BinaryWebServer(
         listen_address, listen_port, handle_build_request)

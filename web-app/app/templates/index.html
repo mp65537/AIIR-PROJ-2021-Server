@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compiler</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+</head>
+<body>
+    <div class="row">
+        <div class="col s4"></div>
+        <form class="col s4" id="form" enctype="multipart/form-data">
+            <div class="input-field row" width="100%">
+                <input id="link" name="link" type="text" placeholder="git repo link" oninput='handleForm()'>
+                <input id="branch" name="branch" type="text" placeholder="branch" oninput='handleForm()'>
+            </div>
+            <div class="file-field input-field row">
+                <div href="#" id="file-button" class="waves-effect waves-light btn-large">
+                    <span>File</span>
+                    <input id="zip" type="file" oninput='handleForm()'>
+                </div>
+                <div class="file-path-wrapper">
+                    <input disabled="true" id='filename' class="file-path validate" type="text" placeholder="*.zip">
+                </div>
+            </div>
+            <div class="input-field row">
+                <input href="#" disabled="true" type="button" id="compile-button" class="waves-effect waves-light btn-large" value="Compile" onclick='submitForm("{{compile}}")'>
+                <input href="#" disabled="true" type="button" id="download-button" class="waves-effect waves-light btn-large" value="Download" onclick='download("{{download}}")'>
+            </div>           
+        </form>
+        <div class="col s4"></div>
+    </div>
+
+    <!-- <div class="row">
+        <div class="col s4"></div>
+            <div class="col s4 my-scroll-box input-field row">
+                <output name="output" value="XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD">
+            </div>
+        <div class="col s4"></div>
+    </div> -->
+    <script src="{{ url_for('static',filename='script.js') }}"></script>
+</body>
+</html>

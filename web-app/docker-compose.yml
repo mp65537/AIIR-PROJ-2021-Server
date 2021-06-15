@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+    web:
+        build: .
+        volumes:
+            - ./app:/app
+            - ./uploads:/uploads
+        ports: [8080:80]
+        environment: 
+            - API=http://head-node:8000/api
+        networks:
+            - web-app-network
+networks:
+  web-app-network:
+    external:
+      name: builder-app-network

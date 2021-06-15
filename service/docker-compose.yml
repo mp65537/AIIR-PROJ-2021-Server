@@ -1,29 +1,32 @@
 version: "3.8"
 services:
-  builder_head:
+  head-node:
     build: .
     image: builder-mpi
     ports:
-      - 8080
+      - 8000:8000
     depends_on: 
-      - builder_worker
+      - worker-node
     links:
-      - builder_worker
+      - worker-node
     volumes:
-      - build-data:/build
+      - build-data:/home/mpirun/build
     networks:
+      - web-app-network
       - builder-network
 
-  builder_worker:
+  worker-node:
     build: .
     image: builder-mpi
     volumes:
-      - build-data:/build
+      - build-data:/home/mpirun/build
     networks:
       - builder-network
       
 networks:
-  net:
+  web-app-network:
+    name: builder-app-network
+  builder-network:
     driver: bridge
 
 volumes:

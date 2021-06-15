@@ -1,6 +1,31 @@
+version: "3.8"
 services:
-  py:
+  mpi_head:
+    build: .
+    ports:
+      - 8080
+    depends_on: 
+      - mpi_node
+    links:
+      - mpi_node
+    volumes:
+      - build-data:/build
+    networks:
+      - net
+
+  mpi_node:
     build: .
     volumes:
-      - ./src/py/:/py/
-    entrypoint: python3 /py/main.py 
+      - build-data:/build
+    networks:
+      - net
+      
+networks:
+  net:
+    driver: bridge
+
+volumes:
+  build-data:
+
+
+

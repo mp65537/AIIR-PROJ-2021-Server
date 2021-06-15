@@ -1,22 +1,28 @@
 import io
 import os
+import shutil
 import zipfile
 import logging
+
+from mpi4py import MPI
 
 from server import BinaryWebServer
 from buildconf import BuildConfReader, BuildConfError
 from tasks import TaskManager
 from logutils import ListLoggingHandler
 
+node_comm = MPI.COMM_WORLD
+node_rank = node_comm.Get_rank()
+
 listen_address = "0.0.0.0"
-listen_port = 8080
-build_directory = "/build"
+listen_port = os.getenv("BUILDER_HTTP_PORT", 8080)
+build_directory = os.getenv("BUILDER_DIR", "/build")
 
 head_logger = logging.getLogger(__name__)
 buildconf_path = os.path.join(build_directory, "buildconf.yaml")
 
 def start_head():
-    logging.info("Application main node has been started")
+    logging.info("Builder main node has been started")
     external_server = BinaryWebServer(
         listen_address, listen_port, handle_build_request)
     try:
@@ -24,6 +30,9 @@ def start_head():
     except KeyboardInterrupt:
         logging.info("Received Ctrl+C. Closing..")
     external_server.stop_server()
+
+def is_head():
+    return (node_rank == 0)
 
 def handle_build_request(request_data):
     response_data = {"success": False, "logs": []}
@@ -51,7 +60,7 @@ def handle_build_request(request_data):
         assign_build_tasks(build_tasks, log_list)
         try:
             artifact_data = package_artifact_zip(build_directory, build_reader.artifact)
-        except (zipfile.BadZipFile, zipfile.LargeZipFile, ForbiddenPath) as error:
+        except (zipfile.BadZipFile, zipfile.LargeZipFile, ForbiddenPathError) as error:
             logging.error("Error packaging artifact: " + str(error))
             return response_data
         response_data["artifact"] = artifact_data
@@ -59,6 +68,7 @@ def handle_build_request(request_data):
         return response_data
     finally:
         head_logger.removeHandler(log_handler)
+        clean_directory(build_directory)
 
 def extract_source_zip(zip_data, out_dir):
     with io.BytesIO(zip_data) as mem_file:
@@ -67,6 +77,7 @@ def extract_source_zip(zip_data, out_dir):
 
 def assign_build_tasks(build_tasks, log_list):
     while not build_tasks.all_done:
+        aa = build_tasks.take_next()
         pass
 
 def package_artifact_zip(in_dir, artifact_entries):
@@ -77,7 +88,7 @@ def package_artifact_zip(in_dir, artifact_entries):
             if "directories" in artifact_entries:
                 for dir_entry in artifact_entries["directories"]:
                     if ".." in dir_entry:
-                        raise ForbiddenPath("The '..' path is forbidden for security reasons")
+                        raise ForbiddenPathError("The '..' path is forbidden for security reasons")
                     dir_path = os.path.realpath(os.path.join(in_dir, dir_entry))
                     for root, _, file_names in os.walk(dir_path):
                         for file_name in file_names:
@@ -87,12 +98,23 @@ def package_artifact_zip(in_dir, artifact_entries):
             if "files" in artifact_entries:
                 for file_entry in artifact_entries["files"]:
                     if ".." in file_entry:
-                        raise ForbiddenPath("The '..' path is forbidden for security reasons")
+                        raise ForbiddenPathError("The '..' path is forbidden for security reasons")
                     file_path = os.path.realpath(os.path.join(in_dir, file_entry))
                     file_relpath = os.path.relpath(file_path, start = in_dir)
                     mem_zip.write(file_path, arcname = file_relpath)
         mem_file.seek(0)
         return mem_file.read()
 
-class ForbiddenPath(Exception):
+def clean_directory(in_dir):
+    for entry_name in os.listdir(in_dir):
+        entry_path = os.path.join(in_dir, entry_name)
+        if os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
+        else:
+            os.remove(entry_path)
+
+class BuildingError(Exception):
+    pass
+
+class ForbiddenPathError(Exception):
     pass

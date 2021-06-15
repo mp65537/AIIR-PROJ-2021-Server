@@ -1,24 +1,26 @@
 version: "3.8"
 services:
-  mpi_head:
+  builder_head:
     build: .
+    image: builder-mpi
     ports:
       - 8080
     depends_on: 
-      - mpi_node
+      - builder_worker
     links:
-      - mpi_node
+      - builder_worker
     volumes:
       - build-data:/build
     networks:
-      - net
+      - builder-network
 
-  mpi_node:
+  builder_worker:
     build: .
+    image: builder-mpi
     volumes:
       - build-data:/build
     networks:
-      - net
+      - builder-network
       
 networks:
   net:
@@ -26,6 +28,4 @@ networks:
 
 volumes:
   build-data:
-
-
 

@@ -18,13 +18,14 @@ node_last = node_count - 1
 
 comm_tag = 25
 listen_address = "0.0.0.0"
-listen_port = os.getenv("BUILDER_HTTP_PORT", 8080)
+listen_port = int(os.getenv("BUILDER_HTTP_PORT", 8080))
 build_directory = os.getenv("BUILDER_DIR", "/build")
 
 head_logger = logging.getLogger(__name__)
 buildconf_path = os.path.join(build_directory, "buildconf.yaml")
 
 def start_head():
+    print("head")
     logging.info("Builder main node has been started")
     external_server = BinaryWebServer(
         listen_address, listen_port, handle_build_request)

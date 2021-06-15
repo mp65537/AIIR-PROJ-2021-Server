@@ -11,7 +11,7 @@ RUN apt-get update -y && \
         python3-dev python3-pip python3-virtualenv \
         build-essential libopenmpi-dev openmpi-bin openmpi-common openmpi-doc binutils \
         python3-msgpack python3-yaml python3-mpi4py && \
-    apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:${USER}' | chpasswd

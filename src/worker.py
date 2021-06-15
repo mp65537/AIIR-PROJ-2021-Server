@@ -18,6 +18,7 @@ build_directory = os.getenv("BUILDER_DIR", "/build")
 worker_logger = logging.getLogger(__name__ + str(node_rank))
 
 def start_worker():
+    print("worker" + str(node_rank))
     logging.info("Builder worker with id = {} has been started".format(node_rank))
     while True:
         task_data = node_comm.recv(source = 0, tag = comm_tag)

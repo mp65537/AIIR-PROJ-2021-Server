@@ -4,6 +4,8 @@ from .errors import ExpandError
 
 def expand_config(build_config):
     build_data = deepcopy(build_config)
+    if "vars" not in build_data:
+        return build_data
     raw_build_vars = build_data["vars"]
     validate_vars(raw_build_vars)
     build_vars = expand_vars_in_vars(raw_build_vars)

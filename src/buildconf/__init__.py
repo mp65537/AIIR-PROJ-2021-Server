@@ -24,14 +24,6 @@ class BuildConfReader:
         return out_dict
 
     @property
-    def container(self):
-        return self.expanded_data["container"]
-
-    @property
-    def shell(self):
-        return self.expanded_data["shell"]
-
-    @property
     def targets_func(self):
         return self._targets_func
 
@@ -54,7 +46,7 @@ class BuildConfReader:
 
     @staticmethod
     def _validate_data(config_data):
-        for section in ("container", "shell", "targets", "artifact"):
+        for section in ("targets", "artifact"):
             BuildConfReader._validate_section(config_data, section)
 
     @staticmethod

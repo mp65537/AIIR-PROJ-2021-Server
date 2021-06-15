@@ -7,16 +7,6 @@ vars:
     - $(BUILDDIR)/module1.o
   CC: gcc
   CFLAGS: -O3 -Wall -std=c99
-container:
-  image_base: debian
-  image_ver: buster-backports
-  image_arch: amd64
-  update_cmd: apt-get update
-  install_cmd: apt-get -y install
-  packages: [gcc]
-shell:
-  path: /bin/bash
-  switch: -c
 targets:
   all:
     check_exist: False
@@ -44,4 +34,4 @@ targets:
     check_exist: False
     command: if [ -d "$(OUTDIR)" ]; then rm -r "$(OUTDIR)"; fi;
 artifact:
-  file: Output/basicapp
+  files: [Output/basicapp]
